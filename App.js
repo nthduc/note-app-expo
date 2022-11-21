@@ -13,7 +13,7 @@ export default function App() {
   return (
     <NativeBaseProvider>
       <NavigationContainer>
-        <Stack.Navigator>
+        <Stack.Navigator initialRouteName='Note'>
           <Stack.Screen name='Home' component={Home} options={{headerShown: false}}/>
           <Stack.Screen name='Note' component={Note} />
           <Stack.Screen name='About' component={About} />
