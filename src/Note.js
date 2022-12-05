@@ -1,16 +1,24 @@
 import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, TextInput } from 'react-native';
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { actions, RichEditor, RichToolbar } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { addNote, editNote } from './redux/notesActions';
 
 
-const Note = () => {
+
+const Note = ({navigation, route}) => {
+
+  const {noteId} = route.params;
+  const notesList = useSelector((state) => state.notes);
+  const dispatch = useDispatch();
 
   const richText = useRef();
   const scrollRef = useRef();
 
   const [descHTML, setDescHTML] = useState('');
-  const [title, setTitle] = useState('');
+  const [topic, setTopic] = useState('');
+  const [selectedNote, setSelectedNote] = useState();
 
   const richTextHandler = (descriptionText) => {
     if(descriptionText){
@@ -20,13 +28,51 @@ const Note = () => {
     }
   }
 
+  useEffect(()=> {
+    if(noteId){
+      console.log('set selectedNote')
+    } else {
+      console.log('no note')
+    }
+  },[noteId])
+
+
+  const onSaveNote = () => {
+    const replaceHTML = descHTML.replace(/<(.|\n)*?>/g,'').trim();
+    const replaceWhiteSpaces = replaceHTML.replace(/&nbsp;/g,'').trim();
+    const date = new Date();
+
+    if(replaceWhiteSpaces.length <= 0 || topic.length <= 0) {
+      console.log('empty')
+    } else {
+      if(noteId){
+        console.log('update note')
+      } else {
+        dispatch(
+          addNote(
+            Date.now(),
+            descHTML,
+            date.toLocaleDateString(),
+            topic,
+            date.toLocaleTimeString(),
+            replaceWhiteSpaces.substring(0,40)
+          )
+        )
+      }
+    }
+
+    navigation.navigate('Home')
+  }
+
   return (
    <SafeAreaView style={styles.container}>
     <StatusBar style='auto' />
 
     <View style={styles.richTextContainer}>
       <View style={{display: 'flex', alignItems: 'center'}}>
-        <TouchableOpacity style={{width: '85%', backgroundColor: '#427dde', borderRadius: 10, padding: 10}}>
+        <TouchableOpacity 
+        onPress={onSaveNote}
+        style={{width: '85%', backgroundColor: '#427dde', borderRadius: 10, padding: 10}}>
           <Text style={{textAlign: 'center', color: '#e6e6e6', fontWeight: '600'}}>
             Save Changes
           </Text>
@@ -54,7 +100,7 @@ const Note = () => {
       </KeyboardAvoidingView>
 
       <View style={{paddingHorizontal: 20, marginTop: 10, marginBottom: 20,backgroundColor: '#e6e6e6'}}>
-        <TextInput placeholder="Enter Title Here..." placeholderTextColor={'gray'} style={{fontSize:16,paddingVertical}}/>
+        <TextInput value={topic} onChangeText={(txt) => setTopic(txt)} placeholder="Enter Title Here..." placeholderTextColor={'gray'} style={{fontSize:16,paddingVertical}}/>
       </View>
 
       <RichToolbar 
